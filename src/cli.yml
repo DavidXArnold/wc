@@ -1,0 +1,45 @@
+name: wc
+version: ".01"
+author: "<davidxarnold@soundofcorduroy.com>"
+about: "print newline, word, and byte counts for each file"
+args:
+    - bytes:
+        short: c
+        long: bytes
+        help: print the byte counts
+        takes_value: false
+    - chars:
+        short: m
+        long: chars
+        help: print the character counts
+        takes_value: false
+    - lines:
+        short: l
+        long: lines
+        help: print the newline counts
+        takes_value: false
+    - files_from:
+        long: files0-from
+        value_name: F
+        help: read input from the files specified by NUL-terminated names in file F; If F is - then read names from standard input
+        takes_value: true
+    - max-line-length:
+        short: L
+        long: max-line-length
+        value_name: max_line_length
+        help: print the length of the longest line
+        takes_value: false
+    - words:
+        short: w
+        long: words
+        help: print the word counts
+        takes_value: false
+subcommands:
+    - test:
+        about: controls testing features
+        version: "0.1"
+        author: Someone E. <someone_else@other.com>
+        args:
+            - debug:
+                short: d
+                help: print debug information

@@ -31,3 +31,8 @@ args:
         multiple: true
         use_delimiter: true
         value_delimiter: ' '
+    - std_in:
+        short: '-'
+        long: '-'
+        takes_value: true
+        multiple: false

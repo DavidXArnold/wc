@@ -15,24 +15,6 @@ struct ObjectAttributes {
     pos: usize,
 }
 
-impl Iterator for ObjectAttributes {
-    type Item = Option<u64>;
-    fn next(&mut self) -> Option<Option<u64>> {
-        if self.pos > 4 {
-            None
-        } else {
-            self.pos += 1;
-            match self.pos {
-                0 => Some(self.bytes),
-                1 => Some(self.characters),
-                2 => Some(self.lines),
-                3 => Some(self.words),
-                _ => Option::None,
-            }
-        }
-    }
-}
-
 // Config is a struct representing configured runtime flags / options
 #[derive(Hash, Eq, PartialEq, Debug)]
 pub struct Conf {
@@ -48,15 +30,16 @@ fn config(arg_matches: &clap::ArgMatches) -> Conf {
     let mut bytes = arg_matches.is_present("bytes");
     let mut lines = arg_matches.is_present("lines");
     let mut words = arg_matches.is_present("words");
+    let characters = arg_matches.is_present("chars");
 
-    if !bytes && !lines && !words {
+    if !bytes && !lines && !words && !characters {
         bytes = true;
         lines = true;
         words = true;
     }
     return Conf {
         bytes: bytes,
-        characters: arg_matches.is_present("chars"),
+        characters: characters,
         lines: lines,
         files_from: arg_matches.is_present("files_from"),
         // @TODO implement max_line_length
@@ -124,15 +107,17 @@ fn read_files(conf: &Conf, filenames: Vec<&str>) -> std::io::Result<()> {
         print!("{}\n", k);
     }
 
-    let sum_totals: u64 = totals.iter().sum();
+    if filenames.len() > 1 {
+        let sum_totals: u64 = totals.iter().sum();
 
-    if sum_totals > 0 {
-        totals
-            .as_ref()
-            .iter()
-            .filter(|x| **x != 0)
-            .for_each(|x| print!("\t{} ", x));
-        println!("total")
+        if sum_totals > 0 {
+            totals
+                .as_ref()
+                .iter()
+                .filter(|x| **x != 0)
+                .for_each(|x| print!("\t{} ", x));
+            println!("total")
+        }
     }
     Ok(())
 }
@@ -151,8 +136,7 @@ fn lines(conf: &Conf, contents: &std::string::String) -> Option<u64> {
         for _line in contents.lines() {
             count += 1;
         }
-        return Some(count as u64);
-        // total += contents.len() as u32;
+        return Some(count);
     } else {
         return None;
     }
@@ -160,9 +144,7 @@ fn lines(conf: &Conf, contents: &std::string::String) -> Option<u64> {
 
 fn characters(conf: &Conf, contents: &std::string::String) -> Option<u64> {
     if conf.characters {
-        let count = contents.unicode_words().collect::<Vec<&str>>();
-
-        return Some(count.len() as u64);
+        return Some(contents.chars().count() as u64);
     } else {
         return None;
     }
@@ -181,4 +163,66 @@ fn words(conf: &Conf, contents: &std::string::String) -> Option<u64> {
 fn read_stream() -> std::io::Result<()> {
     println! {"not implemented"}
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_bytes() {
+        let string = String::from("test all the things");
+        let config = Conf {
+            bytes: true,
+            characters: true,
+            lines: true,
+            files_from: false,
+            max_line_length: 0,
+            words: true,
+        };
+        let option_value: Option<u64> = Some(19);
+        assert_eq!(bytes(&config, &string), option_value)
+    }
+    #[test]
+    fn test_lines() {
+        let string = String::from("test all the things\nand other things");
+        let config = Conf {
+            bytes: false,
+            characters: false,
+            lines: true,
+            files_from: false,
+            max_line_length: 0,
+            words: false,
+        };
+        let option_value: Option<u64> = Some(2);
+        assert_eq!(lines(&config, &string), option_value)
+    }
+    #[test]
+    fn test_characters() {
+        let string = String::from("test all the things\nand other things");
+        let config = Conf {
+            bytes: false,
+            characters: true,
+            lines: false,
+            files_from: false,
+            max_line_length: 0,
+            words: false,
+        };
+        let option_value: Option<u64> = Some(36);
+        assert_eq!(characters(&config, &string), option_value)
+    }
+    #[test]
+    fn test_words() {
+        let string = String::from("test all the things\nand other things");
+        let config = Conf {
+            bytes: false,
+            characters: false,
+            lines: false,
+            files_from: false,
+            max_line_length: 0,
+            words: true,
+        };
+        let option_value: Option<u64> = Some(7);
+        assert_eq!(words(&config, &string), option_value)
+    }
 }

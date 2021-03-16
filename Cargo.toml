@@ -3,7 +3,7 @@ name = "wc"
 version = "0.1.0"
 authors = ["darnold <davidxarnold@soundofcorduroy.com>"]
 edition = "2018"
-about = "Rust implementation of wc command"
+description = "Rust implementation of wc command"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

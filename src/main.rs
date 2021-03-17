@@ -2,8 +2,7 @@ extern crate clap;
 use clap::{load_yaml, App};
 use std::collections::HashMap;
 use std::fs::File;
-use std::io::prelude::*;
-use std::io::BufReader;
+use std::io::{prelude::*, BufReader};
 use unicode_segmentation::UnicodeSegmentation;
 
 #[derive(Hash, Eq, PartialEq, Debug)]
@@ -168,6 +167,11 @@ fn read_stream() -> std::io::Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use rand::distributions::Alphanumeric;
+    use rand::{thread_rng, Rng};
+    use std::env;
+    use std::fs::File;
+    extern crate scopeguard;
 
     #[test]
     fn test_bytes() {
@@ -224,5 +228,35 @@ mod tests {
         };
         let option_value: Option<u64> = Some(7);
         assert_eq!(words(&config, &string), option_value)
+    }
+    #[test]
+    fn test_read_files() {
+        use scopeguard::defer;
+        use std::fs;
+        let rand_string: String = thread_rng()
+            .sample_iter(&Alphanumeric)
+            .take(30)
+            .map(char::from)
+            .collect();
+
+        let mut dir = env::temp_dir();
+        dir.push(rand_string);
+        let f = File::create(&dir);
+        defer! {
+            fs::remove_file(&dir).unwrap();
+        }
+        f.unwrap().write_all(b"sup,\n wc?").unwrap();
+
+        let config = Conf {
+            bytes: false,
+            characters: false,
+            lines: false,
+            files_from: false,
+            max_line_length: 0,
+            words: true,
+        };
+
+        let filenames: Vec<&str> = vec![&dir.to_str().unwrap()];
+        read_files(&config, filenames).unwrap();
     }
 }

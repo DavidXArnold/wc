@@ -10,3 +10,5 @@ description = "Rust implementation of wc command"
 [dependencies]
 clap = {version = "2.33", features = ["yaml"]}
 unicode-segmentation = "1.7.1"
+rand = "0.8.3"
+scopeguard = "1.1.0"
